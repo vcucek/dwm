@@ -1,0 +1,57 @@
+diff --git a/config.h b/config.h
+index 91f161a..d565091 100644
+--- a/config.h
++++ b/config.h
+@@ -63,7 +63,9 @@ static const char *termcmd[]  = { "st", NULL };
+ static Key keys[] = {
+ 	/* modifier                     key        function        argument */
+ 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
++	{ MODKEY|ShiftMask,             XK_p,      spawnfloating,  {.v = dmenucmd } },
+ 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
++	{ MODKEY|ShiftMask,             XK_o,      spawnfloating,  {.v = termcmd } },
+ 	{ MODKEY,                       XK_b,      togglebar,      {0} },
+ 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
+ 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+diff --git a/dwm.c b/dwm.c
+index 5eeb496..e77f2fb 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -209,6 +209,7 @@ static void seturgent(Client *c, int urg);
+ static void showhide(Client *c);
+ static void sigchld(int unused);
+ static void spawn(const Arg *arg);
++static void spawnfloating(const Arg *arg);
+ static void tag(const Arg *arg);
+ static void tagmon(const Arg *arg);
+ static void tile(Monitor *);
+@@ -270,6 +271,7 @@ static Display *dpy;
+ static Drw *drw;
+ static Monitor *mons, *selmon;
+ static Window root, wmcheckwin;
++static int initfloating = 0;
+ 
+ /* configuration, allows nested code to access above variables */
+ #include "config.h"
+@@ -297,7 +299,7 @@ applyrules(Client *c)
+ 	XClassHint ch = { NULL, NULL };
+ 
+ 	/* rule matching */
+-	c->isfloating = 0;
++	c->isfloating = initfloating; initfloating = 0;
+ 	c->tags = 0;
+ 	XGetClassHint(dpy, c->win, &ch);
+ 	class    = ch.res_class ? ch.res_class : broken;
+@@ -1679,6 +1681,13 @@ spawn(const Arg *arg)
+ 	}
+ }
+ 
++void
++spawnfloating(const Arg *arg)
++{
++	initfloating = 1;
++	spawn(arg);
++}
++
+ void
+ tag(const Arg *arg)
+ {
